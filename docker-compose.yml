@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:14.1
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: web_db
+      POSTGRES_HOST_AUTH_METHOD: True
+  web:
+    build: .
+    depends_on:
+      - postgres
+    ports:
+      - 5000:5000
+      - 9229:9229
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: yarn dev
+    environment:
+      - PORT:5000
+      - DATABASE_URL: postgres://postgres@postgres/web_db
