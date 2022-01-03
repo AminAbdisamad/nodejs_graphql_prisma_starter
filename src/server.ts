@@ -12,7 +12,11 @@ import { Query } from './Query'
 
 const resolvers = { Mutation, Query }
 
-const server = new ApolloServer({ resolvers, typeDefs, context })
+const server = new ApolloServer({
+  resolvers,
+  typeDefs,
+  context,
+})
 
 // The `listen` method launches a web server.
 server.listen().then(({ url }: any) => {
