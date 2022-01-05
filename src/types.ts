@@ -33,10 +33,10 @@ export type CreateUserInput = {
 }
 
 export type UpdateUserInput = {
-  email?: InputMaybe<Scalars['String']>
-  name?: InputMaybe<Scalars['String']>
-  username?: InputMaybe<Scalars['String']>
-  password?: InputMaybe<Scalars['String']>
+  email?: string
+  name?: string
+  username?: string
+  password?: string
 }
 
 export type CreatePostInput = {

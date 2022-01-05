@@ -1,7 +1,9 @@
+import { ContextType } from './context'
 import { DBType } from './types'
 export const Query = {
-  users: (_parent: any, _args: any, { db }: DBType) => {
+  users: (_parent: any, _args: any, { db, res }: ContextType) => {
     const users = db.user.findMany({ include: { posts: true } })
+
     return users
   },
 

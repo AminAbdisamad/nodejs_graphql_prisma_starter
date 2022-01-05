@@ -1,7 +1,12 @@
 import bycript from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-import { getUserId } from './utils/auth'
+import {
+  ACCESS_KEY,
+  createAccessToken,
+  createRefreshToken,
+  getUserId,
+} from './utils/auth'
 import { ContextType } from './context'
 import {
   CreateUserInput,
@@ -10,14 +15,12 @@ import {
   UpdateUserInput,
 } from './types'
 
-const SECRET = process.env.SECRET_KEY as string
-
 export const Mutation = {
   // Login
   login: async (
     _parent: any,
     args: { email: string; password: string },
-    { db }: DBType,
+    { db, res }: ContextType,
   ) => {
     // Get user with that email
 
@@ -26,17 +29,16 @@ export const Mutation = {
     // Decode User Password
     const isMatch = await bycript.compare(args.password, user.password)
     if (!isMatch) throw new Error('Incorrect email or password')
-    console.log(isMatch)
-    return {
-      user,
-      token: jwt.sign({ userId: user.id }, SECRET),
-    }
+
+    // Create Refresh token
+    res.cookie('uid', createRefreshToken(user), { httpOnly: true })
+    return { user, token: createAccessToken(user) }
   },
   // User Mutation
   createUser: async (
     _: any,
     { data }: { data: CreateUserInput },
-    { db }: DBType,
+    { db }: ContextType,
   ) => {
     // Check if password longer than 8 chars
     if (data.password.length < 8)
@@ -52,7 +54,7 @@ export const Mutation = {
     }
 
     const user = await db.user.create({ data: { ...data, password } })
-    const token = jwt.sign({ userId: user.id }, SECRET)
+    const token = jwt.sign({ userId: user.id }, ACCESS_KEY)
     return { user, token }
   },
 
@@ -62,19 +64,22 @@ export const Mutation = {
     { data }: { data: UpdateUserInput },
     { db, req }: ContextType,
   ) => {
-    const { userId }: any = await getUserId(req)
-    const parsedID = parseInt(userId)
+    // const { userId }: any = await getUserId(req)
+    // const parsedID = parseInt(userId)
     // check if the user exist first
-    const user = await db.user.findUnique({ where: { id: parsedID } })
+    const user = await db.user.findUnique({ where: { id: 3 } })
 
     if (!user) throw new Error('No User found to update')
+    // Encrypt password before updating
+
+    const hashedPassword = data.password
+      ? await bycript.hash(data.password, 10)
+      : undefined
     return await db.user.update({
-      where: { id: parsedID },
+      where: { id: 3 },
       data: {
-        username: data.username || '',
-        email: data.email || '',
-        name: data.name,
-        password: data.password || '',
+        ...data,
+        password: hashedPassword,
       },
     })
   },
